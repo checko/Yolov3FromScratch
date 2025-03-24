@@ -137,9 +137,9 @@ test_transform = A.Compose([
 
 if __name__ == "__main__":
     dataset = Dataset(
-        txt_file="train.txt",
-        image_dir="images/",
-        label_dir="labels/",
+        txt_file="pascal_voc/ImageSets/Main/train.txt",
+        image_dir="pascal_voc/JPEGImages/",
+        label_dir="pascal_voc/Annotations/",
         grid_sizes=GRID_SIZE,
         anchors=ANCHORS,
         transform=test_transform
