@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from const import device, ANCHORS, s, class_labels
 
 # Defining CNN Block 
 class CNNBlock(nn.Module): 
@@ -135,6 +136,11 @@ class YOLOv3(nn.Module):
 				x = torch.cat([x, route_connections[-1]], dim=1) 
 				route_connections.pop() 
 		return outputs
+
+	def to(self, device_):
+		super().to(device_)
+		self.device = device_
+		return self
 
 
 # Testing YOLO v3 model 

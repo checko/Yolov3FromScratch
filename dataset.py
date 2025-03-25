@@ -6,21 +6,9 @@ import cv2
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
 from utils import iou, convert_cells_to_bboxes, nms, plot_image
+from const import ANCHORS, image_size, s, class_labels
 
-# Constants
-IMAGE_SIZE = 416
-GRID_SIZE = [13, 26, 52]
 
-# Anchor boxes for YOLOv3 (from original paper)
-# Format: [(width, height) * 3 scales]
-# Scale 1: 13x13 (large objects) - larger anchors
-# Scale 2: 26x26 (medium objects) - medium anchors
-# Scale 3: 52x52 (small objects) - smaller anchors
-ANCHORS = [
-    [(116, 90), (156, 198), (373, 326)],     # Larger anchors for 13x13 grid
-    [(30, 61), (62, 45), (59, 119)],         # Medium anchors for 26x26 grid
-    [(10, 13), (16, 30), (33, 23)]           # Small anchors for 52x52 grid
-]
 
 class Dataset(torch.utils.data.Dataset):
     def __init__(
@@ -102,10 +90,10 @@ class Dataset(torch.utils.data.Dataset):
 
 
 train_transform = A.Compose([
-    A.LongestMaxSize(max_size=IMAGE_SIZE),
+    A.LongestMaxSize(max_size=image_size),
     A.PadIfNeeded(
-        min_height=IMAGE_SIZE,
-        min_width=IMAGE_SIZE,
+        min_height=image_size,
+        min_width=image_size,
         border_mode=cv2.BORDER_CONSTANT
     ),
     A.ColorJitter(
@@ -129,10 +117,10 @@ train_transform = A.Compose([
 ))
 
 test_transform = A.Compose([
-    A.LongestMaxSize(max_size=IMAGE_SIZE),
+    A.LongestMaxSize(max_size=image_size),
     A.PadIfNeeded(
-        min_height=IMAGE_SIZE,
-        min_width=IMAGE_SIZE,
+        min_height=image_size,
+        min_width=image_size,
         border_mode=cv2.BORDER_CONSTANT
     ),
     A.Normalize(
@@ -152,7 +140,7 @@ if __name__ == "__main__":
         txt_file="pascal_voc/ImageSets/Main/train.txt",
         image_dir="pascal_voc/JPEGImages/",
         label_dir="pascal_voc/Annotations/",
-        grid_sizes=GRID_SIZE,
+        grid_sizes=[13, 26, 52],
         anchors=ANCHORS,
         transform=test_transform
     )
@@ -164,7 +152,7 @@ if __name__ == "__main__":
     )
 
     scaled_anchors = torch.tensor(ANCHORS) / (
-        1 / torch.tensor(GRID_SIZE).unsqueeze(1).unsqueeze(1).repeat(1, 3, 2)
+        1 / torch.tensor([13, 26, 52] ).unsqueeze(1).unsqueeze(1).repeat(1, 3, 2)
     )
 
     x, y = next(iter(loader))
