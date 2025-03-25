@@ -19,6 +19,8 @@ from const import (
     save_model
 )
 from loss import YOLOLoss
+import os
+from pathlib import Path
 
 def validation_loop(loader, model, loss_fn, scaled_anchors):
     model.eval()
@@ -107,6 +109,10 @@ def training_loop(loader, model, optimizer, loss_fn, scaler, scaled_anchors, epo
 # Creating the model from YOLOv3 class 
 model = YOLOv3().to(device) 
 
+# Create checkpoint directory
+checkpoint_dir = Path("checkpoints")
+checkpoint_dir.mkdir(exist_ok=True)
+
 # Defining the optimizer 
 optimizer = optim.Adam(model.parameters(), lr = leanring_rate) 
 
@@ -190,6 +196,13 @@ for e in range(1, epochs+1):
     
     print(f"Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
     
-    # Saving the model
+    # Saving the model with epoch number
     if save_model:
-        save_checkpoint(model, optimizer, filename=f"checkpoint.pth.tar")
+        checkpoint_file = checkpoint_dir / f"checkpoint_epoch_{e}.pth.tar"
+        save_checkpoint(model, optimizer, filename=str(checkpoint_file))
+        
+        # Keep only the latest 50 checkpoints
+        checkpoints = sorted(checkpoint_dir.glob("checkpoint_epoch_*.pth.tar"))
+        if len(checkpoints) > 50:
+            for checkpoint in checkpoints[:-50]:  # Remove all but the last 50
+                checkpoint.unlink()  # Delete the file
