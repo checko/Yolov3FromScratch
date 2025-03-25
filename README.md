@@ -27,6 +27,19 @@ myyolov3/
 └── README.md       # Project documentation
 ```
 
+## Dataset Structure
+
+```
+pascal_voc/
+└── VOC2012/
+    ├── Annotations/         # XML annotation files
+    ├── ImageSets/
+    │   └── Main/
+    │       ├── train.txt   # Training image names
+    │       └── test.txt    # Testing image names
+    └── JPEGImages/         # Image files (.jpg)
+```
+
 ## Usage
 
 1. Prepare your dataset in PASCAL VOC format

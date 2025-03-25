@@ -36,9 +36,9 @@ if load_model:
 
 # Defining the test dataset and data loader 
 test_dataset = Dataset( 
-    txt_file="pascal_voc/ImageSets/Main/test.txt",
-    image_dir="pascal_voc/JPEGImages/",
-    label_dir="pascal_voc/Annotations/",
+    txt_file="pascal_voc/VOC2007/ImageSets/Main/test.txt",
+    image_dir="pascal_voc/VOC2007/JPEGImages/",
+    label_dir="pascal_voc/VOC2007/Annotations/",
     anchors=ANCHORS, 
     transform=test_transform 
 ) 

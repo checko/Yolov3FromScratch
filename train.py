@@ -96,9 +96,9 @@ scaler = torch.cuda.amp.GradScaler()
 
 # Defining the train dataset 
 train_dataset = Dataset( 
-    txt_file="pascal_voc/ImageSets/Main/train.txt",
-    image_dir="pascal_voc/JPEGImages/",
-    label_dir="pascal_voc/Annotations/",
+    txt_file="pascal_voc/VOC2012/ImageSets/Main/train.txt",
+    image_dir="pascal_voc/VOC2012/JPEGImages/",
+    label_dir="pascal_voc/VOC2012/Annotations/",
     anchors=ANCHORS, 
     transform=train_transform 
 ) 
