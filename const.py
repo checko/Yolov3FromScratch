@@ -19,7 +19,7 @@ ANCHORS = [
 ] 
 
 # Batch size for training 
-batch_size = 32
+batch_size = 20
 
 # Learning rate for training 
 leanring_rate = 1e-5

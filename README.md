@@ -2,24 +2,6 @@
 
 This project is based on the YOLOv3 implementation tutorial from GeeksForGeeks ([YOLOv3 from Scratch using PyTorch](https://www.geeksforgeeks.org/yolov3-from-scratch-using-pytorch/)) with additional modifications and improvements to make it fully functional.
 
-## Changes and Additions
-
-1. Added missing utility functions:
-   - `iou()` - Intersection over Union calculation
-   - `convert_cells_to_bboxes()` - Convert cell predictions to bounding boxes
-   - `nms()` - Non-maximum suppression
-   - `plot_image()` - Visualization function for bounding boxes
-
-2. Modified dataset handling:
-   - Support for PASCAL VOC format
-   - Added data augmentation using Albumentations
-   - Fixed bounding box transformations
-
-3. Enhanced model architecture:
-   - Complete implementation of all YOLOv3 layers
-   - Added proper skip connections
-   - Fixed scale predictions
-
 ## Requirements
 
 - Python 3.8+
@@ -38,6 +20,7 @@ myyolov3/
 ├── yolov3.py       # YOLOv3 model implementation
 ├── utils.py        # Helper functions
 ├── train.py        # Training script
+├── test.py         # Testing and visualization script
 ├── const.py        # Constants and configurations
 ├── runs/           # TensorBoard logs
 └── README.md       # Project documentation
@@ -57,6 +40,12 @@ python train.py
 tensorboard --logdir=runs
 ```
 Then open http://localhost:6006 in your web browser to view training metrics.
+
+5. Test the model and visualize results:
+```bash
+python test.py
+```
+This will load a trained model checkpoint and display test images with predicted bounding boxes.
 
 ## Credits
 
