@@ -2,7 +2,7 @@ import torch
 import torch.optim as optim
 import numpy as np
 from PIL import Image
-from dataset import Dataset, test_transform
+from dataset import Dataset, val_transform
 from yolov3 import YOLOv3
 from loss import YOLOLoss
 from utils import (
@@ -40,7 +40,7 @@ test_dataset = Dataset(
     image_dir="pascal_voc/VOC2007/JPEGImages/",
     label_dir="pascal_voc/VOC2007/Annotations/",
     anchors=ANCHORS, 
-    transform=test_transform 
+    transform=val_transform 
 ) 
 test_loader = torch.utils.data.DataLoader( 
 	test_dataset, 
