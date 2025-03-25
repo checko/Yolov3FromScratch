@@ -28,6 +28,7 @@ This project is based on the YOLOv3 implementation tutorial from GeeksForGeeks (
 - Albumentations
 - NumPy
 - Pillow
+- TensorBoard
 
 ## Directory Structure
 
@@ -36,6 +37,9 @@ myyolov3/
 ├── dataset.py      # Dataset and data loading utilities
 ├── yolov3.py       # YOLOv3 model implementation
 ├── utils.py        # Helper functions
+├── train.py        # Training script
+├── const.py        # Constants and configurations
+├── runs/           # TensorBoard logs
 └── README.md       # Project documentation
 ```
 
@@ -47,6 +51,12 @@ myyolov3/
 ```bash
 python train.py
 ```
+
+4. Monitor training progress with TensorBoard:
+```bash
+tensorboard --logdir=runs
+```
+Then open http://localhost:6006 in your web browser to view training metrics.
 
 ## Credits
 
