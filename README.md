@@ -31,19 +31,27 @@ myyolov3/
 
 ```
 pascal_voc/
-└── VOC2012/
+├── VOC2012/
+│   ├── Annotations/         # XML annotation files
+│   ├── ImageSets/
+│   │   └── Main/
+│   │       └── train.txt    # Training image names
+│   └── JPEGImages/         # Image files (.jpg)
+│
+└── VOC2007/
     ├── Annotations/         # XML annotation files
     ├── ImageSets/
     │   └── Main/
-    │       ├── train.txt   # Training image names
-    │       └── test.txt    # Testing image names
+    │       └── test.txt     # Testing image names
     └── JPEGImages/         # Image files (.jpg)
 ```
 
 ## Usage
 
-1. Prepare your dataset in PASCAL VOC format
-2. Update the paths in main script
+1. Prepare your PASCAL VOC datasets:
+   - VOC2012 for training
+   - VOC2007 for testing
+2. Update the paths in training and testing scripts
 3. Run training:
 ```bash
 python train.py
@@ -53,12 +61,12 @@ python train.py
 ```bash
 tensorboard --logdir=runs
 ```
-Then open http://localhost:6006 in your web browser to view training metrics.
 
-5. Test the model and visualize results:
+5. Test the model using VOC2007:
 ```bash
 python test.py
 ```
+
 This will load a trained model checkpoint and display test images with predicted bounding boxes.
 
 ## Credits
