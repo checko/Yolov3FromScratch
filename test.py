@@ -4,7 +4,7 @@ import numpy as np
 from PIL import Image
 from dataset import Dataset, test_transform
 from yolov3 import YOLOv3
-from train import YOLOLoss
+from loss import YOLOLoss
 from utils import (
     load_checkpoint,
     convert_cells_to_bboxes,
