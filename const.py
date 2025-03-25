@@ -19,13 +19,13 @@ ANCHORS = [
 ] 
 
 # Batch size for training 
-batch_size = 20
+batch_size = 24
 
 # Learning rate for training 
 leanring_rate = 1e-5
 
 # Number of epochs for training 
-epochs = 20
+epochs = 30
 
 # Image size 
 image_size = 416
