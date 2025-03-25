@@ -7,6 +7,7 @@ import albumentations as A
 from albumentations.pytorch import ToTensorV2
 from utils import iou, convert_cells_to_bboxes, nms, plot_image
 from const import ANCHORS, image_size, s, class_labels
+import xml.etree.ElementTree as ET
 
 
 
@@ -40,12 +41,12 @@ class Dataset(torch.utils.data.Dataset):
         if not os.path.exists(img_path):
             img_path = os.path.join(self.image_dir, f"{image_name}.png")
             
-        label_path = os.path.join(self.label_dir, f"{image_name}.txt")
+        label_path = os.path.join(self.label_dir, f"{image_name}.xml")
         
         try:
-            bboxes = np.loadtxt(fname=label_path, delimiter=" ", ndmin=2)
-            bboxes = np.roll(bboxes, -1, axis=1).tolist()
-        except:
+            bboxes = self.parse_xml_annotation(label_path)
+        except Exception as e:
+            print(f"Error loading annotation for {image_name}: {e}")
             bboxes = []
 
         image = np.array(Image.open(img_path).convert("RGB"))
@@ -87,6 +88,37 @@ class Dataset(torch.utils.data.Dataset):
                     targets[scale_idx][anchor_on_scale, i, j, 0] = -1
 
         return image, tuple(targets)
+
+    def parse_xml_annotation(self, xml_path):
+        tree = ET.parse(xml_path)
+        root = tree.getroot()
+        
+        # Get image size for normalization
+        size = root.find('size')
+        img_width = float(size.find('width').text)
+        img_height = float(size.find('height').text)
+        
+        boxes = []
+        for obj in root.findall('object'):
+            class_name = obj.find('name').text
+            # Convert class name to index based on class_labels
+            class_idx = class_labels.index(class_name)
+            
+            bbox = obj.find('bndbox')
+            xmin = float(bbox.find('xmin').text)
+            ymin = float(bbox.find('ymin').text)
+            xmax = float(bbox.find('xmax').text)
+            ymax = float(bbox.find('ymax').text)
+            
+            # Convert to YOLO format (x_center, y_center, width, height)
+            x_center = ((xmin + xmax) / 2) / img_width
+            y_center = ((ymin + ymax) / 2) / img_height
+            width = (xmax - xmin) / img_width
+            height = (ymax - ymin) / img_height
+            
+            boxes.append([x_center, y_center, width, height, class_idx])
+            
+        return boxes
 
 
 train_transform = A.Compose([
