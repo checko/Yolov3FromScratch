@@ -5,10 +5,22 @@ from PIL import Image
 import cv2
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
+from utils import iou, convert_cells_to_bboxes, nms, plot_image
 
 # Constants
 IMAGE_SIZE = 416
 GRID_SIZE = [13, 26, 52]
+
+# Anchor boxes for YOLOv3 (from original paper)
+# Format: [(width, height) * 3 scales]
+# Scale 1: 13x13 (large objects) - larger anchors
+# Scale 2: 26x26 (medium objects) - medium anchors
+# Scale 3: 52x52 (small objects) - smaller anchors
+ANCHORS = [
+    [(116, 90), (156, 198), (373, 326)],     # Larger anchors for 13x13 grid
+    [(30, 61), (62, 45), (59, 119)],         # Medium anchors for 26x26 grid
+    [(10, 13), (16, 30), (33, 23)]           # Small anchors for 52x52 grid
+]
 
 class Dataset(torch.utils.data.Dataset):
     def __init__(
