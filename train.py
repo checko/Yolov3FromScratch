@@ -4,7 +4,7 @@ import torch.optim as optim
 from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
 from yolov3 import YOLOv3
-from dataset import Dataset
+from dataset import Dataset, train_transform, val_transform  # Update import
 from utils import (
     iou,
     save_checkpoint,
@@ -18,10 +18,32 @@ from const import (
     epochs,
     save_model
 )
-from dataset import train_transform
 from loss import YOLOLoss
 
-# Change the training_loop function definition
+def validation_loop(loader, model, loss_fn, scaled_anchors):
+    model.eval()
+    val_losses = []
+    
+    with torch.no_grad():
+        for x, y in loader:
+            x = x.to(device)
+            y0, y1, y2 = (
+                y[0].to(device),
+                y[1].to(device),
+                y[2].to(device),
+            )
+            
+            outputs = model(x)
+            loss = (
+                loss_fn(outputs[0], y0, scaled_anchors[0])
+                + loss_fn(outputs[1], y1, scaled_anchors[1])
+                + loss_fn(outputs[2], y2, scaled_anchors[2])
+            )
+            val_losses.append(loss.item())
+            
+    model.train()
+    return sum(val_losses) / len(val_losses)
+
 def training_loop(loader, model, optimizer, loss_fn, scaler, scaled_anchors, epoch):
     # Creating a progress bar 
     progress_bar = tqdm(loader, leave=True) 
@@ -103,6 +125,14 @@ train_dataset = Dataset(
     transform=train_transform 
 ) 
 
+val_dataset = Dataset(
+    txt_file="pascal_voc/VOC2012/ImageSets/Main/val.txt",
+    image_dir="pascal_voc/VOC2012/JPEGImages/",
+    label_dir="pascal_voc/VOC2012/Annotations/",
+    anchors=ANCHORS,
+    transform=val_transform  # Use validation transform instead of test transform
+)
+
 # Defining the train data loader 
 train_loader = torch.utils.data.DataLoader( 
 	train_dataset, 
@@ -111,6 +141,14 @@ train_loader = torch.utils.data.DataLoader(
 	shuffle = True, 
 	pin_memory = True, 
 ) 
+
+val_loader = torch.utils.data.DataLoader(
+    val_dataset,
+    batch_size=batch_size,
+    num_workers=2,
+    shuffle=False,
+    pin_memory=True,
+)
 
 # Scaling the anchors 
 scaled_anchors = ( 
@@ -121,20 +159,37 @@ scaled_anchors = (
 # Initialize TensorBoard writer
 writer = SummaryWriter('runs/yolov3_training')
 
-# Modify the training loop where the function is called
-# Training the model 
-for e in range(1, epochs+1): 
-	print("Epoch:", e) 
-	training_loop(
+# Training loop with validation
+for e in range(1, epochs+1):
+    print(f"Epoch: {e}")
+    
+    # Training
+    train_loss = training_loop(
         loader=train_loader,
         model=model,
         optimizer=optimizer,
         loss_fn=loss_fn,
         scaler=scaler,
         scaled_anchors=scaled_anchors,
-        epoch=e  # Pass the epoch number
+        epoch=e
     )
-
-	# Saving the model 
-	if save_model: 
-		save_checkpoint(model, optimizer, filename=f"checkpoint.pth.tar")
+    
+    # Validation
+    val_loss = validation_loop(
+        loader=val_loader,
+        model=model,
+        loss_fn=loss_fn,
+        scaled_anchors=scaled_anchors
+    )
+    
+    # Log validation loss
+    writer.add_scalar('Loss/val', val_loss, e)
+    
+    # Log train/val loss ratio to monitor overfitting
+    writer.add_scalar('Loss/train_val_ratio', train_loss/val_loss, e)
+    
+    print(f"Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
+    
+    # Saving the model
+    if save_model:
+        save_checkpoint(model, optimizer, filename=f"checkpoint.pth.tar")

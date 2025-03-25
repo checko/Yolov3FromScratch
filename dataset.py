@@ -121,6 +121,7 @@ class Dataset(torch.utils.data.Dataset):
         return boxes
 
 
+# Training transforms with augmentation
 train_transform = A.Compose([
     A.LongestMaxSize(max_size=image_size),
     A.PadIfNeeded(
@@ -128,14 +129,9 @@ train_transform = A.Compose([
         min_width=image_size,
         border_mode=cv2.BORDER_CONSTANT
     ),
-    A.ColorJitter(
-        brightness=0.5,
-        contrast=0.5,
-        saturation=0.5,
-        hue=0.5,
-        p=0.5
-    ),
+    A.RandomRotate90(),
     A.HorizontalFlip(p=0.5),
+    A.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.3, hue=0.1, p=0.5),
     A.Normalize(
         mean=[0, 0, 0],
         std=[1, 1, 1],
@@ -148,7 +144,8 @@ train_transform = A.Compose([
     label_fields=[]
 ))
 
-test_transform = A.Compose([
+# Validation transforms without augmentation
+val_transform = A.Compose([
     A.LongestMaxSize(max_size=image_size),
     A.PadIfNeeded(
         min_height=image_size,
