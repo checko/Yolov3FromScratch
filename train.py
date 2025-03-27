@@ -21,6 +21,7 @@ from const import (
 from loss import YOLOLoss
 import os
 from pathlib import Path
+from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts
 
 def validation_loop(loader, model, loss_fn, scaled_anchors):
     model.eval()
@@ -116,6 +117,14 @@ checkpoint_dir.mkdir(exist_ok=True)
 # Defining the optimizer 
 optimizer = optim.Adam(model.parameters(), lr = leanring_rate) 
 
+# Add the scheduler
+scheduler = CosineAnnealingWarmRestarts(
+    optimizer,
+    T_0=10,  # Number of epochs before first restart
+    T_mult=2,  # Multiply T_0 by this factor after each restart
+    eta_min=1e-6  # Minimum learning rate
+)
+
 # Defining the loss function 
 loss_fn = YOLOLoss() 
 
@@ -172,6 +181,9 @@ best_val_loss = float('inf')
 for e in range(1, epochs+1):
     print(f"Epoch: {e}")
     
+    # Get current learning rate
+    current_lr = optimizer.param_groups[0]['lr']
+    
     # Training
     train_loss = training_loop(
         loader=train_loader,
@@ -191,22 +203,19 @@ for e in range(1, epochs+1):
         scaled_anchors=scaled_anchors
     )
     
-    # Log validation loss
+    # Log metrics
     writer.add_scalar('Loss/val', val_loss, e)
-    
-    # Log train/val loss ratio to monitor overfitting
     writer.add_scalar('Loss/train_val_ratio', train_loss/val_loss, e)
+    writer.add_scalar('Learning_rate', current_lr, e)
     
-    print(f"Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
+    print(f"Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}, LR: {current_lr:.6f}")
     
-    # Saving the model only if validation loss improves
+    # Step the scheduler
+    scheduler.step()
+    
+    # Save checkpoint logic
     if save_model and val_loss < best_val_loss:
         checkpoint_file = checkpoint_dir / f"checkpoint_epoch_{e}_valloss_{val_loss:.4f}.pth.tar"
-        save_checkpoint(model, optimizer, filename=str(checkpoint_file))
-        best_val_loss = val_loss  # Update best validation loss
-        
-        # Keep only the latest 5 best checkpoints
-        checkpoints = sorted(checkpoint_dir.glob("checkpoint_epoch_*.pth.tar"))
-        if len(checkpoints) > 5:
-            for checkpoint in checkpoints[:-5]:  # Remove all but the last 5
-                checkpoint.unlink()  # Delete the file
+        # Include scheduler state in checkpoint
+        save_checkpoint(model, optimizer, scheduler, filename=str(checkpoint_file))
+        best_val_loss = val_loss

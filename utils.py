@@ -197,11 +197,12 @@ def plot_image(image, boxes):
 	plt.show()
 
 # Function to save checkpoint 
-def save_checkpoint(model, optimizer, filename="my_checkpoint.pth.tar"): 
+def save_checkpoint(model, optimizer, scheduler, filename="my_checkpoint.pth.tar"): 
 	print("==> Saving checkpoint") 
 	checkpoint = { 
 		"state_dict": model.state_dict(), 
 		"optimizer": optimizer.state_dict(), 
+		"scheduler": scheduler.state_dict()
 	} 
 	torch.save(checkpoint, filename)
 
@@ -213,4 +214,4 @@ def load_checkpoint(checkpoint_file, model, optimizer, lr):
 	optimizer.load_state_dict(checkpoint["optimizer"]) 
 
 	for param_group in optimizer.param_groups: 
-		param_group["lr"] = lr 
+		param_group["lr"] = lr
