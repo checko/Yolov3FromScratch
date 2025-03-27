@@ -165,6 +165,9 @@ scaled_anchors = (
 # Initialize TensorBoard writer
 writer = SummaryWriter('runs/yolov3_training')
 
+# Track best validation loss
+best_val_loss = float('inf')
+
 # Training loop with validation
 for e in range(1, epochs+1):
     print(f"Epoch: {e}")
@@ -196,13 +199,14 @@ for e in range(1, epochs+1):
     
     print(f"Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
     
-    # Saving the model with epoch number
-    if save_model:
-        checkpoint_file = checkpoint_dir / f"checkpoint_epoch_{e}.pth.tar"
+    # Saving the model only if validation loss improves
+    if save_model and val_loss < best_val_loss:
+        checkpoint_file = checkpoint_dir / f"checkpoint_epoch_{e}_valloss_{val_loss:.4f}.pth.tar"
         save_checkpoint(model, optimizer, filename=str(checkpoint_file))
+        best_val_loss = val_loss  # Update best validation loss
         
-        # Keep only the latest 50 checkpoints
+        # Keep only the latest 5 best checkpoints
         checkpoints = sorted(checkpoint_dir.glob("checkpoint_epoch_*.pth.tar"))
-        if len(checkpoints) > 50:
-            for checkpoint in checkpoints[:-50]:  # Remove all but the last 50
+        if len(checkpoints) > 5:
+            for checkpoint in checkpoints[:-5]:  # Remove all but the last 5
                 checkpoint.unlink()  # Delete the file
