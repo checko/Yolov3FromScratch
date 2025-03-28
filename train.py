@@ -23,6 +23,27 @@ import os
 from pathlib import Path
 from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts
 
+# Add this after your imports
+def load_checkpoint(checkpoint_path, model, optimizer=None, scheduler=None):
+    """
+    Load a checkpoint and return the epoch and best validation loss
+    """
+    print(f"Loading checkpoint: {checkpoint_path}")
+    checkpoint = torch.load(checkpoint_path)
+    
+    model.load_state_dict(checkpoint['state_dict'])
+    
+    if optimizer is not None:
+        optimizer.load_state_dict(checkpoint['optimizer'])
+    
+    if scheduler is not None and 'scheduler' in checkpoint:
+        scheduler.load_state_dict(checkpoint['scheduler'])
+    
+    epoch = checkpoint.get('epoch', 0)
+    best_val_loss = checkpoint.get('best_val_loss', float('inf'))
+    
+    return epoch, best_val_loss
+
 def validation_loop(loader, model, loss_fn, scaled_anchors):
     model.eval()
     val_losses = []
@@ -177,8 +198,23 @@ writer = SummaryWriter('runs/yolov3_training')
 # Track best validation loss
 best_val_loss = float('inf')
 
-# Training loop with validation
-for e in range(1, epochs+1):
+# Add this before the training loop
+start_epoch = 1
+checkpoint_path = None  # Set this to your checkpoint path if you want to resume training
+
+if checkpoint_path and os.path.exists(checkpoint_path):
+    start_epoch, best_val_loss = load_checkpoint(
+        checkpoint_path,
+        model,
+        optimizer,
+        scheduler
+    )
+    print(f"Resuming training from epoch {start_epoch} with validation loss {best_val_loss:.4f}")
+else:
+    best_val_loss = float('inf')
+
+# Modify your training loop to start from start_epoch
+for e in range(start_epoch, epochs+1):
     print(f"Epoch: {e}")
     
     # Get current learning rate
@@ -215,9 +251,15 @@ for e in range(1, epochs+1):
     
     # Save checkpoint logic
     if save_model and val_loss < best_val_loss:
-        # Save new checkpoint
         checkpoint_file = checkpoint_dir / f"checkpoint_epoch_{e}_valloss_{val_loss:.4f}.pth.tar"
-        save_checkpoint(model, optimizer, scheduler, filename=str(checkpoint_file))
+        save_checkpoint(
+            model, 
+            optimizer, 
+            scheduler, 
+            filename=str(checkpoint_file),
+            epoch=e,
+            best_val_loss=val_loss
+        )
         best_val_loss = val_loss
         
         # Keep only the 5 best checkpoints (lowest validation loss)
