@@ -215,7 +215,16 @@ for e in range(1, epochs+1):
     
     # Save checkpoint logic
     if save_model and val_loss < best_val_loss:
+        # Save new checkpoint
         checkpoint_file = checkpoint_dir / f"checkpoint_epoch_{e}_valloss_{val_loss:.4f}.pth.tar"
-        # Include scheduler state in checkpoint
         save_checkpoint(model, optimizer, scheduler, filename=str(checkpoint_file))
         best_val_loss = val_loss
+        
+        # Keep only the 5 best checkpoints (lowest validation loss)
+        checkpoints = list(checkpoint_dir.glob("checkpoint_epoch_*.pth.tar"))
+        if len(checkpoints) > 5:
+            # Sort checkpoints by validation loss (extracted from filename)
+            checkpoints.sort(key=lambda x: float(str(x).split('valloss_')[1].split('.pth')[0]))
+            # Remove the checkpoints with higher loss
+            for checkpoint in checkpoints[5:]:
+                checkpoint.unlink()  # Delete the file
