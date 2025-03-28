@@ -110,6 +110,9 @@ def training_loop(loader, model, optimizer, loss_fn, scaler, scaled_anchors, epo
         # Backpropagate the loss 
         scaler.scale(loss).backward() 
 
+        # Gradient clipping
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+        
         # Optimization step 
         scaler.step(optimizer) 
 
@@ -139,7 +142,7 @@ checkpoint_dir.mkdir(exist_ok=True)
 # Defining the optimizer 
 optimizer = torch.optim.Adam(
     model.parameters(),
-    lr=1e-3,
+    lr=1e-4,  # Reduced from 1e-3
     weight_decay=1e-4  # L2 regularization
 )
 
@@ -253,7 +256,7 @@ for e in range(start_epoch, epochs+1):
     print(f"Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}, LR: {current_lr:.6f}")
     
     # Step the scheduler
-    scheduler.step()
+    scheduler.step(val_loss)  # Pass validation loss as the metric
     
     # Save checkpoint logic
     if save_model and val_loss < best_val_loss:
