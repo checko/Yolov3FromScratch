@@ -129,21 +129,26 @@ def training_loop(loader, model, optimizer, loss_fn, scaler, scaled_anchors, epo
 
 
 # Creating the model from YOLOv3 class 
-model = YOLOv3().to(device) 
+model = YOLOv3(num_classes=num_classes, dropout_rate=0.1).to(device) 
 
 # Create checkpoint directory
 checkpoint_dir = Path("checkpoints")
 checkpoint_dir.mkdir(exist_ok=True)
 
 # Defining the optimizer 
-optimizer = optim.Adam(model.parameters(), lr = leanring_rate) 
+optimizer = torch.optim.Adam(
+    model.parameters(),
+    lr=1e-3,
+    weight_decay=1e-4  # L2 regularization
+)
 
-# Add the scheduler
-scheduler = CosineAnnealingWarmRestarts(
+# Learning rate scheduler
+scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
     optimizer,
-    T_0=10,  # Number of epochs before first restart
-    T_mult=2,  # Multiply T_0 by this factor after each restart
-    eta_min=1e-6  # Minimum learning rate
+    mode='min',
+    factor=0.1,
+    patience=5,
+    verbose=True
 )
 
 # Defining the loss function 
