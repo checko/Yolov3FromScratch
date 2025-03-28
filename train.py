@@ -16,7 +16,8 @@ from const import (
     leanring_rate,  # Note: there's a typo in 'learning_rate'
     batch_size,
     epochs,
-    save_model
+    save_model,
+    num_classes  # Import num_classes from const
 )
 from loss import YOLOLoss
 import os

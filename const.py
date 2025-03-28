@@ -39,3 +39,6 @@ class_labels = [
 	"chair", "cow", "diningtable", "dog", "horse", "motorbike", "person", 
 	"pottedplant", "sheep", "sofa", "train", "tvmonitor"
 ]
+
+# Number of classes derived from class_labels
+num_classes = len(class_labels)
