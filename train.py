@@ -176,11 +176,11 @@ val_dataset = Dataset(
 
 # Defining the train data loader 
 train_loader = torch.utils.data.DataLoader( 
-	train_dataset, 
-	batch_size = batch_size, 
-	num_workers = 2, 
-	shuffle = True, 
-	pin_memory = True, 
+    train_dataset, 
+    batch_size = batch_size, 
+    num_workers = 2, 
+    shuffle = True, 
+    pin_memory = True, 
 ) 
 
 val_loader = torch.utils.data.DataLoader(
@@ -193,8 +193,8 @@ val_loader = torch.utils.data.DataLoader(
 
 # Scaling the anchors 
 scaled_anchors = ( 
-	torch.tensor(ANCHORS) *
-	torch.tensor(s).unsqueeze(1).unsqueeze(1).repeat(1,3,2) 
+    torch.tensor(ANCHORS) *
+    torch.tensor(s).unsqueeze(1).unsqueeze(1).repeat(1,3,2) 
 ).to(device) 
 
 # Initialize TensorBoard writer
