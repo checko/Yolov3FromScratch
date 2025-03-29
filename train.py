@@ -156,22 +156,6 @@ def find_best_checkpoint(checkpoint_dir):
 # Creating the model from YOLOv3 class 
 model = YOLOv3(num_classes=num_classes, dropout_rate=0.1).to(device) 
 
-# Find best checkpoint before training
-best_checkpoint = find_best_checkpoint(checkpoint_dir)
-start_epoch = 1
-if best_checkpoint:
-    print(f"Found best checkpoint: {best_checkpoint}")
-    start_epoch, best_val_loss = load_checkpoint(
-        best_checkpoint,
-        model,
-        optimizer,
-        scheduler
-    )
-    print(f"Resuming training from epoch {start_epoch} with best validation loss {best_val_loss:.4f}")
-else:
-    print("No existing checkpoints found. Starting training from scratch.")
-    best_val_loss = float('inf')
-
 
 # Defining the optimizer 
 optimizer = torch.optim.Adam(
@@ -189,6 +173,23 @@ scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
     verbose=True,
     min_lr=1e-6       # Add minimum learning rate threshold
 )
+
+# Find best checkpoint before training
+best_checkpoint = find_best_checkpoint(checkpoint_dir)
+start_epoch = 1
+if best_checkpoint:
+    print(f"Found best checkpoint: {best_checkpoint}")
+    start_epoch, best_val_loss = load_checkpoint(
+        best_checkpoint,
+        model,
+        optimizer,
+        scheduler
+    )
+    print(f"Resuming training from epoch {start_epoch} with best validation loss {best_val_loss:.4f}")
+else:
+    print("No existing checkpoints found. Starting training from scratch.")
+    best_val_loss = float('inf')
+
 
 # Defining the loss function 
 loss_fn = YOLOLoss() 
