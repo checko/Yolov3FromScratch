@@ -153,6 +153,9 @@ def find_best_checkpoint(checkpoint_dir):
     )
     return str(min_loss_checkpoint)
 
+# Creating the model from YOLOv3 class 
+model = YOLOv3(num_classes=num_classes, dropout_rate=0.1).to(device) 
+
 # Find best checkpoint before training
 best_checkpoint = find_best_checkpoint(checkpoint_dir)
 start_epoch = 1
@@ -169,8 +172,6 @@ else:
     print("No existing checkpoints found. Starting training from scratch.")
     best_val_loss = float('inf')
 
-# Creating the model from YOLOv3 class 
-model = YOLOv3(num_classes=num_classes, dropout_rate=0.1).to(device) 
 
 # Defining the optimizer 
 optimizer = torch.optim.Adam(
