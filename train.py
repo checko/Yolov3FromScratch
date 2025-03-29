@@ -132,12 +132,45 @@ def training_loop(loader, model, optimizer, loss_fn, scaler, scaled_anchors, epo
     return epoch_loss
 
 
-# Creating the model from YOLOv3 class 
-model = YOLOv3(num_classes=num_classes, dropout_rate=0.1).to(device) 
-
 # Create checkpoint directory
 checkpoint_dir = Path("checkpoints")
 checkpoint_dir.mkdir(exist_ok=True)
+
+# Add this after creating checkpoint_dir and before creating the model
+
+def find_best_checkpoint(checkpoint_dir):
+    """
+    Find the checkpoint with the lowest validation loss in the given directory
+    """
+    checkpoints = list(Path(checkpoint_dir).glob("checkpoint_epoch_*.pth.tar"))
+    if not checkpoints:
+        return None
+        
+    # Extract validation loss from checkpoint filenames and find minimum
+    min_loss_checkpoint = min(
+        checkpoints,
+        key=lambda x: float(str(x).split('valloss_')[1].split('.pth')[0])
+    )
+    return str(min_loss_checkpoint)
+
+# Find best checkpoint before training
+best_checkpoint = find_best_checkpoint(checkpoint_dir)
+start_epoch = 1
+if best_checkpoint:
+    print(f"Found best checkpoint: {best_checkpoint}")
+    start_epoch, best_val_loss = load_checkpoint(
+        best_checkpoint,
+        model,
+        optimizer,
+        scheduler
+    )
+    print(f"Resuming training from epoch {start_epoch} with best validation loss {best_val_loss:.4f}")
+else:
+    print("No existing checkpoints found. Starting training from scratch.")
+    best_val_loss = float('inf')
+
+# Creating the model from YOLOv3 class 
+model = YOLOv3(num_classes=num_classes, dropout_rate=0.1).to(device) 
 
 # Defining the optimizer 
 optimizer = torch.optim.Adam(
@@ -146,13 +179,14 @@ optimizer = torch.optim.Adam(
     weight_decay=1e-4  # L2 regularization
 )
 
-# Learning rate scheduler
+# Modified learning rate scheduler
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
     optimizer,
     mode='min',
-    factor=0.1,
-    patience=5,
-    verbose=True
+    factor=0.5,        # Changed from 0.1 to 0.5 (less aggressive reduction)
+    patience=10,       # Changed from 5 to 10 (wait longer before reducing)
+    verbose=True,
+    min_lr=1e-6       # Add minimum learning rate threshold
 )
 
 # Defining the loss function 
@@ -205,22 +239,6 @@ scaled_anchors = (
 writer = SummaryWriter('runs/yolov3_training')
 
 # Track best validation loss
-best_val_loss = float('inf')
-
-# Add this before the training loop
-start_epoch = 1
-checkpoint_path = None  # Set this to your checkpoint path if you want to resume training
-
-if checkpoint_path and os.path.exists(checkpoint_path):
-    start_epoch, best_val_loss = load_checkpoint(
-        checkpoint_path,
-        model,
-        optimizer,
-        scheduler
-    )
-    print(f"Resuming training from epoch {start_epoch} with validation loss {best_val_loss:.4f}")
-else:
-    best_val_loss = float('inf')
 
 # Modify your training loop to start from start_epoch
 for e in range(start_epoch, epochs+1):
