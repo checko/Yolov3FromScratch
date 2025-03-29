@@ -42,3 +42,6 @@ class_labels = [
 
 # Number of classes derived from class_labels
 num_classes = len(class_labels)
+
+# Training dropout rate
+TRAIN_DROPOUT_RATE = 0.5  # Moved from train.py

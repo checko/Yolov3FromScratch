@@ -16,7 +16,8 @@ from const import (
     batch_size,
     epochs,
     save_model,
-    num_classes  # Import num_classes from const
+    num_classes,  # Import num_classes from const
+    TRAIN_DROPOUT_RATE  # Add this import
 )
 from loss import YOLOLoss
 import os
@@ -121,7 +122,7 @@ checkpoint_dir = Path("checkpoints")
 checkpoint_dir.mkdir(exist_ok=True)
 
 # Creating the model from YOLOv3 class 
-model = YOLOv3(num_classes=num_classes, dropout_rate=0.1).to(device) 
+model = YOLOv3(num_classes=num_classes, dropout_rate=TRAIN_DROPOUT_RATE).to(device) 
 
 
 # Defining the optimizer 
