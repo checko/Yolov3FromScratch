@@ -7,7 +7,6 @@ from yolov3 import YOLOv3
 from dataset import Dataset, train_transform, val_transform  # Update import
 from utils import (
     iou,
-    save_checkpoint,
 )
 from const import (
     ANCHORS,
@@ -23,27 +22,12 @@ from loss import YOLOLoss
 import os
 from pathlib import Path
 from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts
-
-# Add this after your imports
-def load_checkpoint(checkpoint_path, model, optimizer=None, scheduler=None):
-    """
-    Load a checkpoint and return the epoch and best validation loss
-    """
-    print(f"Loading checkpoint: {checkpoint_path}")
-    checkpoint = torch.load(checkpoint_path)
-    
-    model.load_state_dict(checkpoint['state_dict'])
-    
-    if optimizer is not None:
-        optimizer.load_state_dict(checkpoint['optimizer'])
-    
-    if scheduler is not None and 'scheduler' in checkpoint:
-        scheduler.load_state_dict(checkpoint['scheduler'])
-    
-    epoch = checkpoint.get('epoch', 0)
-    best_val_loss = checkpoint.get('best_val_loss', float('inf'))
-    
-    return epoch, best_val_loss
+from checkpoint import (
+    save_checkpoint,
+    load_checkpoint,
+    find_best_checkpoint,
+    cleanup_old_checkpoints
+)
 
 def validation_loop(loader, model, loss_fn, scaled_anchors):
     model.eval()
@@ -135,23 +119,6 @@ def training_loop(loader, model, optimizer, loss_fn, scaler, scaled_anchors, epo
 # Create checkpoint directory
 checkpoint_dir = Path("checkpoints")
 checkpoint_dir.mkdir(exist_ok=True)
-
-# Add this after creating checkpoint_dir and before creating the model
-
-def find_best_checkpoint(checkpoint_dir):
-    """
-    Find the checkpoint with the lowest validation loss in the given directory
-    """
-    checkpoints = list(Path(checkpoint_dir).glob("checkpoint_epoch_*.pth.tar"))
-    if not checkpoints:
-        return None
-        
-    # Extract validation loss from checkpoint filenames and find minimum
-    min_loss_checkpoint = min(
-        checkpoints,
-        key=lambda x: float(str(x).split('valloss_')[1].split('.pth')[0])
-    )
-    return str(min_loss_checkpoint)
 
 # Creating the model from YOLOv3 class 
 model = YOLOv3(num_classes=num_classes, dropout_rate=0.1).to(device) 
@@ -291,11 +258,5 @@ for e in range(start_epoch, epochs+1):
         )
         best_val_loss = val_loss
         
-        # Keep only the 5 best checkpoints (lowest validation loss)
-        checkpoints = list(checkpoint_dir.glob("checkpoint_epoch_*.pth.tar"))
-        if len(checkpoints) > 5:
-            # Sort checkpoints by validation loss (extracted from filename)
-            checkpoints.sort(key=lambda x: float(str(x).split('valloss_')[1].split('.pth')[0]))
-            # Remove the checkpoints with higher loss
-            for checkpoint in checkpoints[5:]:
-                checkpoint.unlink()  # Delete the file
+        # Clean up old checkpoints
+        cleanup_old_checkpoints(checkpoint_dir, keep_best_n=5)

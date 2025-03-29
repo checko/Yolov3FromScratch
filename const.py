@@ -25,7 +25,7 @@ batch_size = 24
 leanring_rate = 1e-5
 
 # Number of epochs for training 
-epochs = 30
+epochs = 330
 
 # Image size 
 image_size = 416
