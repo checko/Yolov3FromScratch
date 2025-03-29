@@ -129,9 +129,27 @@ train_transform = A.Compose([
         min_width=image_size,
         border_mode=cv2.BORDER_CONSTANT
     ),
-    A.RandomRotate90(),
+    A.RandomRotate90(p=0.5),
     A.HorizontalFlip(p=0.5),
-    A.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.3, hue=0.1, p=0.5),
+    A.OneOf([
+        A.RandomBrightnessContrast(brightness_limit=0.3, contrast_limit=0.3),
+        A.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.3, hue=0.1),
+    ], p=0.5),
+    A.OneOf([
+        A.GaussianBlur(blur_limit=(3, 7)),
+        A.MotionBlur(blur_limit=(3, 7)),
+        A.MedianBlur(blur_limit=7),
+    ], p=0.3),
+    A.OneOf([
+        A.GaussNoise(var_limit=(10.0, 50.0)),
+        A.ISONoise(color_shift=(0.01, 0.05), intensity=(0.1, 0.5)),
+    ], p=0.3),
+    A.OneOf([
+        A.RandomGamma(gamma_limit=(80, 120)),
+        A.HueSaturationValue(hue_shift_limit=20, sat_shift_limit=30, val_shift_limit=20),
+    ], p=0.3),
+    A.RandomShadow(p=0.2),
+    A.CLAHE(clip_limit=4.0, tile_grid_size=(8, 8), p=0.2),
     A.Normalize(
         mean=[0, 0, 0],
         std=[1, 1, 1],
