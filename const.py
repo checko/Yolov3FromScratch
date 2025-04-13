@@ -1,4 +1,5 @@
 import torch
+import os
 
 # Device 
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -33,12 +34,21 @@ image_size = 416
 # Grid cell sizes 
 s = [image_size // 32, image_size // 16, image_size // 8] 
 
+def load_class_labels(file_path='/home/charles-chang/datasets/coco/official/pascal_coco/classes.txt'):
+    """Load class labels from a text file. If file doesn't exist, use default PASCAL VOC classes"""
+    if os.path.exists(file_path):
+        with open(file_path, 'r') as f:
+            return [line.strip() for line in f.readlines()]
+    else:
+        # Default PASCAL VOC classes as fallback
+        return [
+            "aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat",
+            "chair", "cow", "diningtable", "dog", "horse", "motorbike", "person",
+            "pottedplant", "sheep", "sofa", "train", "tvmonitor"
+        ]
+
 # Class labels 
-class_labels = [ 
-	"aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", 
-	"chair", "cow", "diningtable", "dog", "horse", "motorbike", "person", 
-	"pottedplant", "sheep", "sofa", "train", "tvmonitor"
-]
+class_labels = load_class_labels()
 
 # Number of classes derived from class_labels
 num_classes = len(class_labels)
